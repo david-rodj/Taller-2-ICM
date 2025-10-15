@@ -24,6 +24,11 @@ object MapHelper {
         return marker
     }
 
+    fun updateMarker(marker: Marker, geoPoint: GeoPoint, mapView: MapView) {
+        marker.position = geoPoint
+        mapView.invalidate()
+    }
+
     fun addPolyline(mapView: MapView, points: List<GeoPoint>): Polyline {
         val polyline = Polyline()
         polyline.setPoints(points)

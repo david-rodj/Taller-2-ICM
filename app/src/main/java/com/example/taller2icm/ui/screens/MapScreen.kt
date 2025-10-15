@@ -1,26 +1,27 @@
 package com.example.taller2icm.ui.screens
 
 import android.content.Context
-import android.view.MotionEvent
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.taller2icm.utils.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
+import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -33,9 +34,11 @@ fun MapScreen(onBack: () -> Unit) {
     var searchText by remember { mutableStateOf("") }
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var currentLocation by remember { mutableStateOf<GeoPoint?>(null) }
+    var userMarker by remember { mutableStateOf<Marker?>(null) }
     var pathPoints by remember { mutableStateOf<MutableList<GeoPoint>>(mutableListOf()) }
     var polyline by remember { mutableStateOf<Polyline?>(null) }
     var isDarkMode by remember { mutableStateOf(false) }
+    var followUser by remember { mutableStateOf(true) }
 
     // Helpers
     val locationHandler = remember { LocationHandler(context) }
@@ -59,6 +62,7 @@ fun MapScreen(onBack: () -> Unit) {
 
         // Iniciar sensor de luz
         lightSensorHandler.startListening { isDark ->
+            Log.d("MapScreen", "Sensor de luz cambió. ¿Es oscuro?: $isDark")
             isDarkMode = isDark
             mapView?.let { map ->
                 if (isDark) {
@@ -82,14 +86,38 @@ fun MapScreen(onBack: () -> Unit) {
             locationHandler.getCurrentLocation { geoPoint ->
                 currentLocation = geoPoint
                 mapView?.let { map ->
-                    MapHelper.centerMapOnLocation(map, geoPoint, 15.0)
-                    MapHelper.addMarker(map, geoPoint, "Mi Ubicación")
+                    // Crear o actualizar marcador del usuario
+                    if (userMarker == null) {
+                        userMarker = MapHelper.addMarker(map, geoPoint, "Mi Ubicación", "Ubicación actual")
+                    } else {
+                        userMarker?.position = geoPoint
+                        map.invalidate()
+                    }
+
+                    if (followUser) {
+                        MapHelper.centerMapOnLocation(map, geoPoint, 15.0)
+                    }
                 }
             }
 
             // Iniciar actualizaciones de ubicación
             locationHandler.startLocationUpdates { geoPoint ->
                 currentLocation = geoPoint
+
+                // Actualizar marcador del usuario
+                mapView?.let { map ->
+                    if (userMarker == null) {
+                        userMarker = MapHelper.addMarker(map, geoPoint, "Mi Ubicación", "Ubicación actual")
+                    } else {
+                        userMarker?.position = geoPoint
+                        map.invalidate()
+                    }
+
+                    // Centrar mapa si followUser está activo
+                    if (followUser) {
+                        MapHelper.centerMapOnLocation(map, geoPoint, 15.0)
+                    }
+                }
 
                 // Agregar punto al polyline
                 pathPoints.add(geoPoint)
@@ -119,7 +147,11 @@ fun MapScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             // TextField para búsqueda de direcciones
             OutlinedTextField(
                 value = searchText,
@@ -134,26 +166,57 @@ fun MapScreen(onBack: () -> Unit) {
                         onClick = {
                             if (searchText.isNotEmpty()) {
                                 scope.launch {
+                                    Log.d("MapScreen", "Buscando: $searchText")
                                     val location = geocoderHelper.getLocationFromAddress(searchText)
-                                    location?.let { geoPoint ->
+                                    if (location != null) {
+                                        Log.d("MapScreen", "Ubicación encontrada: ${location.latitude}, ${location.longitude}")
                                         mapView?.let { map ->
                                             // Agregar marcador en la ubicación encontrada
-                                            MapHelper.addMarker(map, geoPoint, searchText)
+                                            MapHelper.addMarker(map, location, searchText)
                                             // Mover cámara a la ubicación
-                                            MapHelper.centerMapOnLocation(map, geoPoint, 15.0)
+                                            MapHelper.centerMapOnLocation(map, location, 15.0)
                                         }
+                                    } else {
+                                        Log.d("MapScreen", "No se encontró la ubicación")
                                     }
                                 }
                             }
                         }
                     ) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                            imageVector = Icons.Default.Search,
                             contentDescription = "Buscar"
                         )
                     }
                 }
             )
+
+            // Toggle para seguir al usuario
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Seguir mi ubicación",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Switch(
+                    checked = followUser,
+                    onCheckedChange = {
+                        followUser = it
+                        if (it && currentLocation != null) {
+                            mapView?.let { map ->
+                                MapHelper.centerMapOnLocation(map, currentLocation!!, 15.0)
+                            }
+                        }
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Indicador de modo del mapa
             Text(
@@ -166,7 +229,11 @@ fun MapScreen(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             // Mapa OpenStreetMap
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
                 AndroidView(
                     factory = { ctx ->
                         createMapView(ctx, geocoderHelper, scope).also {
@@ -226,10 +293,12 @@ private fun createMapView(
 
             override fun longPressHelper(p: GeoPoint?): Boolean {
                 p?.let { geoPoint ->
+                    Log.d("MapScreen", "Long press en: ${geoPoint.latitude}, ${geoPoint.longitude}")
                     // Obtener dirección del punto (reverse geocoding)
                     scope.launch {
                         val address = geocoderHelper.getAddressFromLocation(geoPoint)
                         val markerTitle = address ?: "Lat: ${geoPoint.latitude}, Lng: ${geoPoint.longitude}"
+                        Log.d("MapScreen", "Dirección encontrada: $markerTitle")
 
                         // Agregar marcador con la dirección como título
                         MapHelper.addMarker(this@apply, geoPoint, markerTitle)
