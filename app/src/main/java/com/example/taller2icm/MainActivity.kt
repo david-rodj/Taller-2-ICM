@@ -9,9 +9,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.taller2icm.ui.MainScreen
-import com.example.taller2icm.ui.MapScreen
-import com.example.taller2icm.ui.MediaScreen
+import com.example.taller2icm.ui.screens.MainScreen
+import com.example.taller2icm.ui.screens.MapScreen
+import com.example.taller2icm.ui.screens.MediaScreen
 import org.osmdroid.config.Configuration
 
 class MainActivity : ComponentActivity() {
