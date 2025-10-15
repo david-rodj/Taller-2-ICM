@@ -56,6 +56,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling )
     debugImplementation(libs.androidx.ui.test.manifest)
+
     // OpenStreetMap (osmdroid)
     implementation("org.osmdroid:osmdroid-android:6.1.17")
 
@@ -72,6 +73,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil-video:2.5.0")
 
+    // ExoPlayer para reproducir videos
+    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
@@ -81,4 +85,7 @@ dependencies {
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+
+    // Material Icons Extended
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 }
