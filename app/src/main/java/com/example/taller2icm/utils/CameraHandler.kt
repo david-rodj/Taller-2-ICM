@@ -16,12 +16,13 @@ fun rememberTakePhotoLauncher(
     context: Context,
     onPhotoTaken: (Uri) -> Unit
 ): Pair<ManagedActivityResultLauncher<Uri, Boolean>, () -> Uri> {
+    var latestUri: Uri? = null
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success) {
-            // Foto tomada exitosamente
-            // TODO: Manejar el resultado
+        if (success && latestUri != null) {
+            onPhotoTaken(latestUri!!)
         }
     }
 
@@ -30,7 +31,9 @@ fun rememberTakePhotoLauncher(
         val storageDir = File(context.getExternalFilesDir(null), "Pictures")
         storageDir.mkdirs()
         val photoFile = File(storageDir, "PHOTO_$timeStamp.jpg")
-        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+        latestUri = uri
+        uri
     }
 
     return Pair(launcher, createUri)
@@ -41,12 +44,13 @@ fun rememberTakeVideoLauncher(
     context: Context,
     onVideoRecorded: (Uri) -> Unit
 ): Pair<ManagedActivityResultLauncher<Uri, Boolean>, () -> Uri> {
+    var latestUri: Uri? = null
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CaptureVideo()
     ) { success ->
-        if (success) {
-            // Video grabado exitosamente
-            // TODO: Manejar el resultado
+        if (success && latestUri != null) {
+            onVideoRecorded(latestUri!!)
         }
     }
 
@@ -55,7 +59,9 @@ fun rememberTakeVideoLauncher(
         val storageDir = File(context.getExternalFilesDir(null), "Movies")
         storageDir.mkdirs()
         val videoFile = File(storageDir, "VIDEO_$timeStamp.mp4")
-        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile)
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", videoFile)
+        latestUri = uri
+        uri
     }
 
     return Pair(launcher, createUri)
