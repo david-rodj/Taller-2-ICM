@@ -2,6 +2,7 @@ package com.example.taller2icm.ui.screens
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -62,9 +64,10 @@ fun MapScreen(onBack: () -> Unit) {
 
         // Iniciar sensor de luz
         lightSensorHandler.startListening { isDark ->
-            Log.d("MapScreen", "Sensor de luz cambió. ¿Es oscuro?: $isDark")
+            Log.d("MapScreen", "Sensor de luz cambió. ¿Es oscuro?: $isDark. Lux detectado")
             isDarkMode = isDark
             mapView?.let { map ->
+                Log.d("MapScreen", "Aplicando estilo ${if (isDark) "OSCURO" else "CLARO"}")
                 if (isDark) {
                     MapStyleHelper.applyDarkStyle(map)
                 } else {
@@ -151,15 +154,14 @@ fun MapScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .padding(16.dp)
         ) {
             // TextField para búsqueda de direcciones
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
                 label = { Text("Buscar dirección") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 trailingIcon = {
                     IconButton(
@@ -191,11 +193,11 @@ fun MapScreen(onBack: () -> Unit) {
                 }
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Toggle para seguir al usuario
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -220,34 +222,42 @@ fun MapScreen(onBack: () -> Unit) {
 
             // Indicador de modo del mapa
             Text(
-                text = "Modo: ${if (isDarkMode) "Oscuro" else "Claro"}",
-                modifier = Modifier.padding(horizontal = 16.dp),
+                text = "Modo: ${if (isDarkMode) "Oscuro 🌙" else "Claro ☀️"}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Mapa OpenStreetMap
-            Box(
+            // Contenedor del mapa con borde y padding
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(1f),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                AndroidView(
-                    factory = { ctx ->
-                        createMapView(ctx, geocoderHelper, scope).also {
-                            mapView = it
-                            // Aplicar estilo inicial
-                            if (isDarkMode) {
-                                MapStyleHelper.applyDarkStyle(it)
-                            } else {
-                                MapStyleHelper.applyLightStyle(it)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                        .border(2.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    AndroidView(
+                        factory = { ctx ->
+                            createMapView(ctx, geocoderHelper, scope).also {
+                                mapView = it
+                                // Aplicar estilo inicial
+                                Log.d("MapScreen", "Creando mapa con estilo inicial: ${if (isDarkMode) "OSCURO" else "CLARO"}")
+                                if (isDarkMode) {
+                                    MapStyleHelper.applyDarkStyle(it)
+                                } else {
+                                    MapStyleHelper.applyLightStyle(it)
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }
@@ -310,4 +320,4 @@ private fun createMapView(
 
         overlays.add(mapEventsOverlay)
     }
-}
+} 

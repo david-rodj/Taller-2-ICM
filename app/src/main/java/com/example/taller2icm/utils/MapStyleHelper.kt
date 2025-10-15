@@ -1,5 +1,6 @@
 package com.example.taller2icm.utils
 
+import android.util.Log
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.MapTileIndex
@@ -9,11 +10,16 @@ object MapStyleHelper {
 
     // Tile source para modo claro (Mapnik - estándar de OpenStreetMap)
     fun applyLightStyle(mapView: MapView) {
+        Log.d("MapStyleHelper", "Aplicando estilo CLARO (Mapnik)")
         mapView.setTileSource(TileSourceFactory.MAPNIK)
+        mapView.invalidate() // Forzar redibujado
+        Log.d("MapStyleHelper", "Estilo claro aplicado correctamente")
     }
 
     // Tile source para modo oscuro (CartoDB Dark Matter)
     fun applyDarkStyle(mapView: MapView) {
+        Log.d("MapStyleHelper", "Aplicando estilo OSCURO (CartoDB Dark)")
+
         val darkTileSource = object : OnlineTileSourceBase(
             "CartoDark",
             0, 20, 256, ".png",
@@ -34,5 +40,7 @@ object MapStyleHelper {
         }
 
         mapView.setTileSource(darkTileSource)
+        mapView.invalidate() // Forzar redibujado
+        Log.d("MapStyleHelper", "Estilo oscuro aplicado correctamente")
     }
 }
