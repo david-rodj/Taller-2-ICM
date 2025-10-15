@@ -16,31 +16,25 @@ object MapStyleHelper {
         Log.d("MapStyleHelper", "Estilo claro aplicado correctamente")
     }
 
-    // Tile source para modo oscuro (CartoDB Dark Matter)
+    // Tile source para modo oscuro (CartoDB Dark Matter - Versión más clara)
     fun applyDarkStyle(mapView: MapView) {
-        Log.d("MapStyleHelper", "Aplicando estilo OSCURO (CartoDB Dark)")
-
-        val darkTileSource = object : OnlineTileSourceBase(
-            "CartoDark",
+        Log.d("MapStyleHelper", "Aplicando estilo OSCURO (CartoDB Dark Matter)")
+        val darkMatter = object : OnlineTileSourceBase(
+            "CartoDB Dark Matter",
             0, 20, 256, ".png",
-            arrayOf(
-                "https://a.basemaps.cartocdn.com/dark_all/",
+            arrayOf("https://a.basemaps.cartocdn.com/dark_all/",
                 "https://b.basemaps.cartocdn.com/dark_all/",
-                "https://c.basemaps.cartocdn.com/dark_all/",
-                "https://d.basemaps.cartocdn.com/dark_all/"
-            )
+                "https://c.basemaps.cartocdn.com/dark_all/")
         ) {
             override fun getTileURLString(pMapTileIndex: Long): String {
-                return baseUrl +
-                        MapTileIndex.getZoom(pMapTileIndex) + "/" +
+                return baseUrl + MapTileIndex.getZoom(pMapTileIndex) + "/" +
                         MapTileIndex.getX(pMapTileIndex) + "/" +
-                        MapTileIndex.getY(pMapTileIndex) +
-                        mImageFilenameEnding
+                        MapTileIndex.getY(pMapTileIndex) + ".png"
             }
         }
-
-        mapView.setTileSource(darkTileSource)
-        mapView.invalidate() // Forzar redibujado
+        mapView.setTileSource(darkMatter)
+        mapView.invalidate()
         Log.d("MapStyleHelper", "Estilo oscuro aplicado correctamente")
     }
+
 }

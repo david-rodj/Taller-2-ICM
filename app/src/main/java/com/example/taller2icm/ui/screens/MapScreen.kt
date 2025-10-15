@@ -222,7 +222,7 @@ fun MapScreen(onBack: () -> Unit) {
 
             // Indicador de modo del mapa
             Text(
-                text = "Modo: ${if (isDarkMode) "Oscuro 🌙" else "Claro ☀️"}",
+                text = "Modo: ${if (isDarkMode) "Oscuro" else "Claro"}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
