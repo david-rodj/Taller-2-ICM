@@ -33,7 +33,17 @@ object MapHelper {
         val polyline = Polyline()
         polyline.setPoints(points)
         polyline.color = Color.BLUE
-        polyline.width = 5f
+        polyline.width = 8f
+        mapView.overlays.add(polyline)
+        mapView.invalidate()
+        return polyline
+    }
+
+    fun addRoutePolyline(mapView: MapView, points: List<GeoPoint>): Polyline {
+        val polyline = Polyline()
+        polyline.setPoints(points)
+        polyline.color = Color.RED
+        polyline.width = 8f
         mapView.overlays.add(polyline)
         mapView.invalidate()
         return polyline
